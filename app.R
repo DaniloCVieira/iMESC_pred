@@ -8066,7 +8066,7 @@ output$rf_rel<-renderUI({
         numericInput("ntree", strong("ntree",popify(a(icon("fas fa-question-circle")),'ntree',"Number of trees to grow. This should not be set to too small a number, to ensure that every input row gets predicted at least a few times",options=list(container="body"))), value = 50, width="100px")
       ),
       inline(
-        pickerInput("rf_search", strong("search",popify(a(icon("fas fa-question-circle")),'search',"how the mtry parameter (i.e. the number of variables randomly sampled as candidates at each split) is determined",options=list(container="body"))), choices = c("grid","random"), width="125px")
+        pickerInput("rf_search", strong("search",popify(a(icon("fas fa-question-circle")),'search',"how the mtry parameter (i.e. the number of variables randomly sampled as candidates at each split) is determined",options=list(container="body"))), choices = c("grid","random","user-defined"), width="125px")
       ),
       inline(
         uiOutput("rf_mtry")
@@ -11722,6 +11722,9 @@ get_stackmap<-reactive({
       if (input$rf_type == 'Classification') {
         sup[1] <- as.factor(sup[, 1])
       }
+      seed<-if (!is.na(input$seedrf)) { input$seedrf} else{
+        NULL
+      }
 
       join <- na.omit(cbind(sup, envi[rownames(sup), ,drop=F]))
       envi <- join[-1]
@@ -11742,7 +11745,7 @@ get_stackmap<-reactive({
                        data.frame(somC),
                        supervisor = "clusters",
                        prev.idw = F,
-                       seed = input$seedrf,
+                       seed = seed,
                        ntree = input$ntree,
 
                        trainControl.args = list(
