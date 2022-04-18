@@ -203,7 +203,7 @@ wrapRF<-function(data,supv=NULL, ntree=500, seed=NULL,trainControl.args = list(m
 
   suppressWarnings({
     controle_treinamento=do.call(trainControl,trainControl.args)
-    if(is.null(seed)){set.seed(seed)}
+
     base<-na.omit(cbind(HAB=supv,data[rownames(supv),,drop=F]))
     colnames(base)[1]<-"HAB"
 
@@ -215,6 +215,7 @@ wrapRF<-function(data,supv=NULL, ntree=500, seed=NULL,trainControl.args = list(m
     base$HAB<-factor(base$HAB,levels=lev, labels = lev)
 
     }
+    set.seed(seed)
     modelo = train(HAB ~ ., data = base, trControl = controle_treinamento, method ="rf", ntree=ntree, localImp = TRUE, preProcess=preProcess,keep.forest=T,...)
     attr(modelo,"data")<-base
     return(modelo)

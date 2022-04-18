@@ -3310,6 +3310,7 @@ req(isFALSE(input$stack_scatter_3d))}
   })
 
   getdata_rfX <- reactive({
+    req(input$data_rfX)
     data=vals$saved_data[[input$data_rfX]]
     vals$saved_labels<-attr(data, "factors")
     data
@@ -8068,8 +8069,11 @@ output$rf_rel<-renderUI({
         pickerInput("rf_search", strong("search",popify(a(icon("fas fa-question-circle")),'search',"how the mtry parameter (i.e. the number of variables randomly sampled as candidates at each split) is determined",options=list(container="body"))), choices = c("grid","random"), width="125px")
       ),
       inline(
+        uiOutput("rf_mtry")
+      ),
+      inline(
         conditionalPanel("input.rf_search!='user-defined'",{
-          numericInput("tuneLength", strong("tuneLength",popify(a(icon("fas fa-question-circle")),'tuneLength',"the maximum number of 'mtry' combinations that will be generated",options=list(container="body"))), value = 5, width="100px")
+          numericInput("tuneLength", strong("tuneLength",popify(a(icon("fas fa-question-circle")),'tuneLength',"the maximum number of mtry- combinations that will be generated",options=list(container="body"))), value = 5, width="100px")
 
         })
       ),
@@ -8124,7 +8128,12 @@ output$rf_rel<-renderUI({
     )
   })
 
+output$rf_mtry<-renderUI({
+data<-getdata_rfX()
+  req(input$rf_search=='user-defined')
+  numericInput("mtry", strong("mtry",popify(a(icon("fas fa-question-circle")),'mtry',"the number of variables randomly sampled as candidates at each split",options=list(container="body"))), value = 2, width="100px", max=ncol(data))
 
+})
   output$choices_rf <- renderUI({
 
     req(length(vals$saved_data)>0)
@@ -11717,6 +11726,13 @@ get_stackmap<-reactive({
       join <- na.omit(cbind(sup, envi[rownames(sup), ,drop=F]))
       envi <- join[-1]
       somC <- join[1]
+      rf_search<-if(input$rf_search=="user-defined"){
+        "grid"
+      } else{
+
+        input$rf_search
+
+      }
       withProgress(message = "Running rf the time taken will depend on the random forest tuning",
                    min = 1,
                    max = 1,
@@ -11735,7 +11751,7 @@ get_stackmap<-reactive({
                          repeats = input$repeatsrf,
                          p=input$pleaverf/100,
                          savePredictions = "final",
-                         search=input$rf_search
+                         search=rf_search
                        ),
                        tuneLength=input$tuneLength
                      )
