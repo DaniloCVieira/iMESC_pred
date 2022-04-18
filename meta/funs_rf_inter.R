@@ -215,7 +215,7 @@ wrapRF<-function(data,supv=NULL, ntree=500, seed=NULL,trainControl.args = list(m
     base$HAB<-factor(base$HAB,levels=lev, labels = lev)
 
     }
-    modelo = train(HAB ~ ., data = base, trControl = controle_treinamento, method ="rf", ntree=ntree, localImp = TRUE, preProcess=preProcess,keep.forest=T)
+    modelo = train(HAB ~ ., data = base, trControl = controle_treinamento, method ="rf", ntree=ntree, localImp = TRUE, preProcess=preProcess,keep.forest=T,...)
     attr(modelo,"data")<-base
     return(modelo)
   })
@@ -562,7 +562,13 @@ plotCM<-function(rf, palette,newcolhabs)
 {
   {
 
-    my.data=round(getConfusion(rf),2)
+    if(class(rf)=="randomForest"){
+      my.data=round(getConfusion(rf)*100,2)
+    } else{
+      my.data=round(getConfusion(rf),2)
+    }
+
+
     #my.data<-my.data[,-c(2:4)]
    # my.data<-my.data[-c(2:4),]
     rownames(my.data)<-paste("     ",rownames(my.data))
@@ -621,8 +627,13 @@ plotCM<-function(rf, palette,newcolhabs)
       size = 18,face="bold",
     )
 
+if(class(rf)=="randomForest"){
+  ggtab<-tab_add_footnote(ggtab,  gsub("Confusion Matrix","",attr(rf,'title')), face="italic")
+} else{
+  ggtab<-tab_add_footnote(ggtab,  gsub("Confusion Matrix","",attr(getConfusion(rf),'title')), face="italic")
+}
 
-    ggtab<-tab_add_footnote(ggtab,  gsub("Confusion Matrix","",attr(getConfusion(rf),'title')), face="italic")
+
     #ggtab$theme$plot.margin<-margin(0, -10, 0, 0,"cm")
   }
   #attributes(ggtab$theme$plot.margin)

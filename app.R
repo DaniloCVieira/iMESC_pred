@@ -247,16 +247,7 @@ sidebarMenu(
       ),
       tabName = "menu_rf"
     ),
-    menuItem(
-      div(
-        icon("fas fa-tree"),
-        HTML('&nbsp;'),
-        "Decision Tree",
 
-        style = "margin-left: -8px; color: white; font-size: 14px; margin-top: -2px;margin-bottom: -2px;"
-      ),
-      tabName = "menu_dt"
-    ),
 
     menuItem(
       div(icon("fas fa-map"), HTML('&nbsp;'), "Spatial tools", style = "margin-left: -8px; color: white; font-size: 14px; margin-top: -2px;margin-bottom: -2px;"),
@@ -4082,7 +4073,7 @@ req(isFALSE(input$stack_scatter_3d))}
             h4(strong("Select/Remove observations:",tipify(a(icon("fas fa-question-circle")),"Tools for restricting the observations along all Data-Attribute, Factor-Attribute and Coords-Attribute (if exists)", options=list(container="body"))),style="border-bottom: 1px solid SeaGreen;"),
             column(12,style="background:white",checkboxInput("na.omit", strong("NA.omit",pophelp(NULL,"check to remove all observations that contain any empty cases (NAs)")), value = F)),
 
-            column(12,style="background:white; margin-top: 10px",checkboxInput("match", strong("Match observations using:",tipify(a(icon("fas fa-question-circle")),"check to select a reference to match the observations", options=list(container="body"))), value = F)),
+            column(12,style="background:white; margin-top: 10px",checkboxInput("match", strong("Select observations using:",tipify(a(icon("fas fa-question-circle")),"check to select a reference to match the observations", options=list(container="body"))), value = F)),
             conditionalPanel("input.match % 2",{
               column(12,style="background:white",
                 selectInput("filterby",NULL, choices=c("a factor level","IDs from another Datalist","individual selection")),
@@ -7501,8 +7492,14 @@ validate(need(length(vals$RF_results)>0,"Please train a RF model in "))
            verbatimTextOutput("Confusion_RF")
     )
   })
-
-  output$Confusion_RF<-renderPrint(confusionMatrix(vals$RF_results))
+  output$CM <- renderPlot({
+    rf<-vals$RF_results$finalModel
+    attr(rf,'title')<- attr(getConfusion(vals$RF_results),'title')
+    res<-plotCM(rf, input$rfpalette,  newcolhabs=newcolhabs$df)
+    vals$cm_rf<-res
+    res
+  })
+  output$Confusion_RF<-renderPrint(confusionMatrix(   predict(vals$RF_results$finalModel),vals$RF_results$trainingData[,1]))
 
 
   accu <- reactive({
@@ -8068,6 +8065,15 @@ output$rf_rel<-renderUI({
         numericInput("ntree", strong("ntree",popify(a(icon("fas fa-question-circle")),'ntree',"Number of trees to grow. This should not be set to too small a number, to ensure that every input row gets predicted at least a few times",options=list(container="body"))), value = 50, width="100px")
       ),
       inline(
+        pickerInput("rf_search", strong("search",popify(a(icon("fas fa-question-circle")),'search',"how the mtry parameter (i.e. the number of variables randomly sampled as candidates at each split) is determined",options=list(container="body"))), choices = c("grid","random"), width="125px")
+      ),
+      inline(
+        conditionalPanel("input.rf_search!='user-defined'",{
+          numericInput("tuneLength", strong("tuneLength",popify(a(icon("fas fa-question-circle")),'tuneLength',"the maximum number of 'mtry' combinations that will be generated",options=list(container="body"))), value = 5, width="100px")
+
+        })
+      ),
+      inline(
         numericInput("seedrf", strong("seed",tipify(a(icon("fas fa-question-circle")), textseed(), options=list(container="body"))), value = NULL, width="100px")
       ),
 
@@ -8339,6 +8345,12 @@ observeEvent(input$rf_type,{
     sup_test<-attr(vals$RF_results,"supervisor")
     supname<-paste0("Observed Y [",sup_test,"]")
     column(12,
+
+           renderPrint({
+
+             postResample(unlist(pred_rf()),RF_observed())
+           }),
+
            conditionalPanel("input.rfpred_which=='Datalist'",{
              selectInput("predrf_newY",
                          span(supname,tipify(icon("fas fa-question-circle"),"Data containing observed values to be compared with predicted values")),names(vals$saved_data[getobsRF()])
@@ -8536,7 +8548,7 @@ output$RF_prederrors<-renderUI({
     m<-vals$RF_results
     factors<-attr(vals$saved_data[[input$predrf_new]],"factors")
 
-    rf_pred <- predict(m,newdata = test_rf())
+    rf_pred <- predict(m$finalModel,newdata = test_rf())
     res<-data.frame(Predictions= rf_pred)
     rownames(res)<-rownames(test_rf())
    # attr(res,"obs")<-test_rf()
@@ -11722,8 +11734,10 @@ get_stackmap<-reactive({
                          number = input$cvrf,
                          repeats = input$repeatsrf,
                          p=input$pleaverf/100,
-                         savePredictions = "final"
-                       )
+                         savePredictions = "final",
+                         search=input$rf_search
+                       ),
+                       tuneLength=input$tuneLength
                      )
                      attr(RF,"test_partition")<-paste("Test data:",input$rf_test_partition,"::",input$testdata_rf)
                      attr(RF,"Y")<-paste(input$data_rfY,"::",input$rf_sup)
@@ -11894,11 +11908,7 @@ get_stackmap<-reactive({
 
 
 
-  output$CM <- renderPlot({
-    res<-plotCM(vals$RF_results, input$rfpalette,  newcolhabs=newcolhabs$df)
-    vals$cm_rf<-res
-    res
-  })
+
 
   topo.reactive <- reactive({
     topology(getdata_som(), dist = input$distmethod)
