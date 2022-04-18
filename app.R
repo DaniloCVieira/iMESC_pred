@@ -8122,18 +8122,53 @@ output$rf_rel<-renderUI({
       )
       ,
       column(12, align = "center",
-        popify(actionButton("trainRF", h4(icon("fas fa-tree"),icon("fas fa-tree", style = "margin-left: -10px;"),icon("fas fa-tree", style = "margin-left: -10px;"),"train RF",icon("fas fa-arrow-circle-right")), style = "background:  #05668D; color: white"),NULL,"Click to run")
+        uiOutput("train_RF_button")
       ),
 
     )
   })
 
+  output$train_RF_button<-renderUI({
+    if(input$rf_search=="user-defined" ){
+      req(length(mtry_pool$df)>0)
+    }
+
+    popify(actionButton("trainRF", h4(icon("fas fa-tree"),icon("fas fa-tree", style = "margin-left: -10px;"),icon("fas fa-tree", style = "margin-left: -10px;"),"train RF",icon("fas fa-arrow-circle-right")), style = "background:  #05668D; color: white"),NULL,"Click to run")
+  })
+
+
+
 output$rf_mtry<-renderUI({
 data<-getdata_rfX()
   req(input$rf_search=='user-defined')
-  numericInput("mtry", strong("mtry",popify(a(icon("fas fa-question-circle")),'mtry',"the number of variables randomly sampled as candidates at each split",options=list(container="body"))), value = 2, width="100px", max=ncol(data))
+  div(
+    inline(numericInput("mtry", strong("mtry",popify(a(icon("fas fa-question-circle")),'mtry',"the number of variables randomly sampled as candidates at each split",options=list(container="body"))), value = 2, width="100px", max=ncol(data))),
+    inline(actionButton("mtry_include",tipify(icon("fas fa-arrow-right"),"Include mtry in the grid search"))),
+    inline(
+      column(12,
+             style="margin-top: 20px",
+             inline(verbatimTextOutput("mtry_grid")))
+    ),
+    inline(
+      actionButton("remove_mtry",tipify(icon("fas fa-eraser"),"restart mtry"), style="button_active"
+      )
+    )
+  )
 
 })
+
+
+mtry_pool<-reactiveValues(df=c())
+observeEvent(input$mtry_include,{
+  mtry_pool$df<-c(mtry_pool$df,input$mtry)
+})
+observeEvent(input$remove_mtry,{
+  mtry_pool$df<-c()
+})
+
+output$mtry_grid<-renderPrint({mtry_pool$df})
+
+
   output$choices_rf <- renderUI({
 
     req(length(vals$saved_data)>0)
@@ -11726,15 +11761,18 @@ get_stackmap<-reactive({
         NULL
       }
 
+
+
       join <- na.omit(cbind(sup, envi[rownames(sup), ,drop=F]))
       envi <- join[-1]
       somC <- join[1]
-      rf_search<-if(input$rf_search=="user-defined"){
-        "grid"
+      if(input$rf_search=="user-defined"){
+        rf_search<-"grid"
+        validate(need(length(mtry_pool$df)>0,"Requires at least one mtry value"))
+        tuneGrid=data.frame(mtry=mtry_pool$df)
       } else{
-
-        input$rf_search
-
+        rf_search<-input$rf_search
+        tuneGrid=NULL
       }
       withProgress(message = "Running rf the time taken will depend on the random forest tuning",
                    min = 1,
@@ -11756,7 +11794,8 @@ get_stackmap<-reactive({
                          savePredictions = "final",
                          search=rf_search
                        ),
-                       tuneLength=input$tuneLength
+                       tuneLength=input$tuneLength,
+                       tuneGrid=tuneGrid
                      )
                      attr(RF,"test_partition")<-paste("Test data:",input$rf_test_partition,"::",input$testdata_rf)
                      attr(RF,"Y")<-paste(input$data_rfY,"::",input$rf_sup)
@@ -11783,13 +11822,23 @@ get_stackmap<-reactive({
           "Error in training the RF model. Check if the number of observations in X and Y are compatible"
         ))
       })
+
     } else{
       output$rf_war<-NULL
     }
   })
 
 
-
+observe({
+  req(input$rf_search=='user-defined')
+  if(input$rf_search=="user-defined" & !length(mtry_pool$df)>0) {
+    output$rf_war<-renderUI({
+      column(12,em(style="color: gray",
+                   "Requires at least one mtry value when 'search' is 'user-defined'"
+      ))
+    })
+  }
+})
 
 
   observe({
