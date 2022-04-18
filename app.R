@@ -7456,7 +7456,11 @@ output$RF_results<-renderUI({
 validate(need(length(vals$RF_results)>0,"Please train a RF model in "))
   tabsetPanel(
     tabPanel(strong("2.1. Summary"),column(12,style="background: white",uiOutput("rfsummary"))),
-    tabPanel(strong("2.2. Training error "),uiOutput("rf_table")),
+    tabPanel(strong("2.2. Training error "),
+             splitLayout(
+               uiOutput("rf_table"),
+               plotOutput("rf_mtry_plot")
+             )),
     tabPanel(strong("2.3. RandomForest Explainer"),
              uiOutput("RFexp")),
     tabPanel(strong("2.5 Confusion Matrix"),
@@ -7467,6 +7471,12 @@ validate(need(length(vals$RF_results)>0,"Please train a RF model in "))
 
 })
 
+
+output$rf_mtry_plot<-renderPlot({
+  plot(
+    vals$RF_results
+  )
+})
 
   output$CMres <- renderUI({
     validate(need(is.factor( vals$RF_results$finalModel$y), "Confusion matrices are only valid for classification (factor) models."))
