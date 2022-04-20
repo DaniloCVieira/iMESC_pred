@@ -1,28 +1,41 @@
 RFerror_class<-function(predicted,observed)
-{
+{suppressWarnings({
+
   res<-data.frame(predicted$individual)
 
   res0<-matrix(NA,length(observed),2, dimnames = list(c(rownames(res)),c('Accuracy','Error')))
 
+
   for ( i in 1:length(observed))
   {
-    res0[i,'Accuracy']<-sum(res[i,]==as.character(observed[i]))/length(res[i,])*100
+    acc<-as.numeric(res[i,]==as.character(observed[i]))
+    res0[i,'Accuracy']<-sum(acc)/length(res[i,])*100
     res0[i,'Error']<-100-res0[i,'Accuracy']
+
   }
   res0
-}
+
+})}
 
 RFerror_reg<-function(predicted,observed){
+  suppressWarnings({
 
-  res<-data.frame(predicted$individual)
-  res0<-matrix(NA,length(observed),4, dimnames = list(c(rownames(res)),c('mae','mse','rmse','mape')))
-  for ( i in 1:length(observed)){
-    res0[i,"mae"]<-mae(as.numeric(observed[i]),as.numeric(res[i,]))
-    res0[i,"mse"]<-mse(as.numeric(observed[i]),as.numeric(res[i,]))
-    res0[i,"rmse"]<-rmse(as.numeric(observed[i]),as.numeric(res[i,]))
-    res0[i,"mape"]<-mape(as.numeric(observed[i]),as.numeric(res[i,]))
-  }
-  res0
+
+    res<-data.frame(predicted$individual)
+    res0<-matrix(NA,length(observed),4, dimnames = list(c(rownames(res)),c('mae','mse','rmse','mape')))
+    for ( i in 1:length(observed)){
+      res0[i,"mae"]<-Metrics::mae(as.numeric(observed[i]),as.numeric(res[i,]))
+      res0[i,"mse"]<-Metrics::mse(as.numeric(observed[i]),as.numeric(res[i,]))
+      res0[i,"rmse"]<-Metrics::rmse(as.numeric(observed[i]),as.numeric(res[i,]))
+      res0[i,"mape"]<-Metrics::mape(as.numeric(observed[i]),as.numeric(res[i,]))
+
+
+    }
+
+
+    res0
+
+  })
 }
 
 rsq <- function (obs, pred) cor(obs, pred) ^ 2
@@ -216,7 +229,7 @@ wrapRF<-function(data,supv=NULL, ntree=500, seed=NULL,trainControl.args = list(m
 
     }
     set.seed(seed)
-    modelo = train(HAB ~ ., data = base, trControl = controle_treinamento, method ="rf", ntree=ntree, localImp = TRUE, preProcess=preProcess,keep.forest=T,...)
+    modelo = caret::train(HAB ~ ., data = base, trControl = controle_treinamento, method ="rf", ntree=ntree, localImp = TRUE, preProcess=preProcess,keep.forest=T,...)
     attr(modelo,"data")<-base
     return(modelo)
   })

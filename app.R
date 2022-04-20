@@ -336,6 +336,10 @@ background: black;
 font-size: 12px;
 border-radius: 3px 3px 3px 3px;
  }
+#mtry_grid{
+margin: 0px;
+padding: 0px;
+}
 
 #getpool {
 margin: 0px;
@@ -364,30 +368,68 @@ color: #0D47A1
 }
 
 
-           .map_control_style .radio {
+ .map_control_style .radio {
 border-radius: 0px 0px 0px 0px;
 border: 0px solid white;
 white-space: nowrap;
 margin: 0px;
 padding: 0;
 }
-          .map_control_style .form-control {
+.map_control_style .form-control {
 border-radius: 0px 0px 0px 0px;
-border: 0px solid white;
+border: 1px solid #E8E8E8;
+
 white-space: nowrap;
 margin: 0px;
 display:inline-block;
 line-height: 0px;
 max-height: 20px;
 padding: 0;
+padding-left: 3px;
+background: white;
+}
+
+.map_control_style .btn {
+border-radius: 0px 0px 0px 0px;
+border: 1px solid #E8E8E8;
+
+background: white;
+white-space: nowrap;
+margin: 0px;
+display:inline-block;
+cursor: pointer;
+max-height: 20px;
+padding: 0;
+padding-left: 3px;
 }
 .map_control_style .checkbox{
 border-radius: 0px 0px 0px 0px;
 border: 0px solid white;
-
 margin: 0px;
-
 padding: 0;
+}
+
+
+
+.map_control_style .shiny-input-container .selectize-input {
+border-radius: 0px 0px 0px 0px;
+white-space: nowrap;
+margin: 0px;
+display:inline-block;
+max-height: 20px;
+padding: 0;
+padding-left: 1px;
+}
+
+.map_control_style .shiny-input-container{
+  border-radius: 0px 0px 0px 0px;
+  border: 0px solid white;
+white-space: nowrap;
+margin: 0px;
+display:inline-block;
+padding: 0;
+
+
 }
 
 .well2{
@@ -401,18 +443,6 @@ padding: 0;
     -webkit-box-shadow: inset 0 1px 1px rgb(0 0 0 / 5%);
     box-shadow: inset 0 1px 1px rgb(0 0 0 / 5%)
 }
-
-.map_control_style .btn {
-border-radius: 0px 0px 0px 0px;
-border: 0px solid white;
-white-space: nowrap;
-margin: 0px;
-display:inline-block;
-cursor: pointer;
-max-height: 20px;
-padding: 0;
-}
-
 .ident-picker {
     padding-top:1px;
     padding-bottom:1px;
@@ -425,29 +455,7 @@ padding: 0;
     box-shadow: inset 0 1px 1px rgb(0 0 0 / 5%)
             }
 
-.map_control_style .shiny-input-container .selectize-input {
-
-border-radius: 0px 0px 0px 0px;
-border: 0px solid red;
-white-space: nowrap;
-margin: 0px;
-display:inline-block;
-max-height: 20px;
-padding: 0;
-}
-
-.map_control_style .shiny-input-container{
-  border-radius: 0px 0px 0px 0px;
-  border: 0px solid white;
-white-space: nowrap;
-margin: 0px;
-display:inline-block;
-padding: 0;
-}
-
-
-
-           #fac_convert .modal-dialog { width: fit-content !important; }
+#fac_convert .modal-dialog { width: fit-content !important; }
             #map_side02 .modal-dialog { width: fit-content !important; }
           .btn:hover{
   background-color: SeaGreen;
@@ -649,8 +657,7 @@ fluidPage(
                    div(
                           tabsetPanel(id = "rf_tab",
                                       tabPanel(strong("1. Training"),value="rf_tab1",
-                                               column(12,style="background: white",
-                                                      uiOutput("controlrf")))
+                                               uiOutput("controlrf"))
 
                           )
                    )),
@@ -7455,12 +7462,19 @@ output$RF_predictions<-renderUI({
 output$RF_results<-renderUI({
 validate(need(length(vals$RF_results)>0,"Please train a RF model in "))
   tabsetPanel(
-    tabPanel(strong("2.1. Summary"),column(12,style="background: white",uiOutput("rfsummary"))),
-    tabPanel(strong("2.2. Training error "),
-             splitLayout(
-               uiOutput("rf_table"),
-               plotOutput("rf_mtry_plot")
+    tabPanel(strong("2.1. Summary"),
+             column(12,style="background: white",
+               splitLayout(
+                 uiOutput("rfsummary"),
+
+                 div(
+                   renderPrint(vals$RF_results$results),
+                   plotOutput("rf_mtry_plot")
+                 )
+               )
              )),
+    tabPanel(strong("2.2. Training error "),
+             uiOutput("rf_table")),
     tabPanel(strong("2.3. RandomForest Explainer"),
              uiOutput("RFexp")),
     tabPanel(strong("2.5 Confusion Matrix"),
@@ -7473,9 +7487,15 @@ validate(need(length(vals$RF_results)>0,"Please train a RF model in "))
 
 
 output$rf_mtry_plot<-renderPlot({
-  plot(
-    vals$RF_results
-  )
+  m<-vals$RF_results
+  res<-m$results
+  plot(res[,2]~res$mtry, type="n", col="darkblue", las=1, xlab="# Randomly Selected Predictors",ylab=paste(colnames(res)[2],resampName(m,F)), pch=16, ann=F, axes=F, xaxp=NULL)
+  grid()
+  par(new=T)
+  plot(res[,2]~res$mtry, type="b", col="darkblue", las=1, xlab="# Randomly Selected Predictors",ylab=paste(colnames(res)[2],resampName(m,F)), pch=16)
+  abline(v=res[which(res[,1]==m$finalModel$mtry),1], lty=2,col="red")
+
+
 })
 
   output$CMres <- renderUI({
@@ -8071,66 +8091,105 @@ output$rf_rel<-renderUI({
 
 
   output$controlrf <- renderUI({
-    div(
-      inline(
-        numericInput("ntree", strong("ntree",popify(a(icon("fas fa-question-circle")),'ntree',"Number of trees to grow. This should not be set to too small a number, to ensure that every input row gets predicted at least a few times",options=list(container="body"))), value = 50, width="100px")
-      ),
-      inline(
-        pickerInput("rf_search", strong("search",popify(a(icon("fas fa-question-circle")),'search',"how the mtry parameter (i.e. the number of variables randomly sampled as candidates at each split) is determined",options=list(container="body"))), choices = c("grid","random","user-defined"), width="125px")
-      ),
-      inline(
+    column(12,class="well2",
+
+      div(class="map_control_style",style="color: #05668D; margin-top: 20px",
+
+        div(
+          tipify(icon("fas fa-question-circle"),"Number of trees to grow. This should not be set to too small a number, to ensure that every input row gets predicted at least a few times", options = list(container="body")),
+          "+ ntree:",
+          inline(
+            numericInput("ntree", NULL, value = 50, width="120px")
+          )
+        ),
+        div(
+          tipify(icon("fas fa-question-circle"),"how the mtry parameter (i.e. the number of variables randomly sampled as candidates at each split) is determined", options = list(container="body")),
+          "+ search:",
+          inline(
+            pickerInput("rf_search", NULL, choices = c("grid","random","user-defined"), width="110px")
+          )
+        ),
+
         uiOutput("rf_mtry")
-      ),
-      inline(
-        conditionalPanel("input.rf_search!='user-defined'",{
-          numericInput("tuneLength", strong("tuneLength",popify(a(icon("fas fa-question-circle")),'tuneLength',"the maximum number of mtry- combinations that will be generated",options=list(container="body"))), value = 5, width="100px")
+        ,
 
-        })
-      ),
-      inline(
-        numericInput("seedrf", strong("seed",tipify(a(icon("fas fa-question-circle")), textseed(), options=list(container="body"))), value = NULL, width="100px")
-      ),
+        uiOutput("rf_grid_search"),
 
-      div(
-        splitLayout(cellWidths = c("30%","30%","30%"),
-          div(
-            radioButtons("res_method","Resampling method", choiceValues=list("boot","cv","repeatedcv","LOOCV","LGOCV"), choiceNames=list(
-              tipify(div("boot"),"bootstraping", options=list(container="body")),
-              tipify(div("cv"), "k-fold cross-validation", options=list(container="body")),
-              tipify(div("repeatedcv"),"repeated k-fold cross-validation", options=list(container="body")),
-              tipify(div("LOOCV"),"Leave one out", options=list(container="body")),
-              tipify(div("LGOCV"),"leave-group out cross-validation", options=list(container="body"))
-            ),
-            selected="repeatedcv"
-            )
+        div(
+          tipify(icon("fas fa-question-circle"),textseed(), options = list(container="body")),
+          "+ seed:",
+          inline(
+            numericInput("seedrf", NULL, value = NULL, width="122px")
+          )
+        ),
+        div(popify(icon("fas fa-question-circle"),NULL,
+                   HTML(paste0(
+                     div(HTML(paste0(strong("repeatedcv:")," repeated k-fold cross-validation;"))),
+                     div(HTML(paste0(strong("boot:")," bootstraping;"))),
+
+                     div(HTML(paste0(strong("LOOCV:")," Leave one out;"))),
+                     div(HTML(paste0(strong("LGOCV:")," Leave-group out")))
+
+                   )), options=list(container="body")
+
+        ),
+        "+ Resampling method:",
+        pickerInput("res_method",NULL, choices=list("repeatedcv","boot","LOOCV","LGOCV"), width = "100px")
+        ),
+        div(
+          inline(
+            conditionalPanel("input.res_method=='cv'|input.res_method=='repeatedcv'",{
+              div(
+
+                tipify(icon("fas fa-question-circle"),"number of folds", options=list(container="body")),"+ cv:",
+                numericInput("cvrf", NULL, value = 5,width="140px")
+
+              )
+            })
           ),
           div(
-            inline(
-              conditionalPanel("input.res_method=='cv'|input.res_method=='repeatedcv'",{
-                numericInput("cvrf", strong("cv", tipify(a(icon("fas fa-question-circle")),"number of folds", options=list(container="body"))), value = 5,width="100px")
-              })
-            ),
             inline(
               conditionalPanel("input.res_method=='repeatedcv'",{
-                numericInput("repeatsrf", strong("repeats", tipify(a(icon("fas fa-question-circle")),"the number of complete sets of folds to compute", options=list(container="body"))), value = 1,width="100px")
+               inline(
+                 div(tipify(icon("fas fa-question-circle"),"the number of complete sets of folds to compute", options=list(container="body")),
+                     "+ repeats:",
+                     numericInput("repeatsrf",NULL, value = 1,width="109px")
+                 )
+               )
+
               })
-            ),
-            inline(
-              conditionalPanel("input.res_method=='boot'",{
-                numericInput("cvrf", strong("number", tipify(a(icon("fas fa-question-circle")),"the number of resampling iterations", options=list(container="body"))), value = 99,width="100px")
-              })
-            ),
-            inline(
-              conditionalPanel("input.res_method=='LGOCV'",{
-                numericInput("pleaverf", strong("p (%)", tipify(a(icon("fas fa-question-circle")),"the training percentage", options=list(container="body"))), value = 10,width="100px")})
             )
           ),
-          column(12,style='white-space: normal;',
-            uiOutput("rf_war")
+          inline(
+            conditionalPanel("input.res_method=='boot'",{
+              inline(
+                div(
+                  tipify(icon("fas fa-question-circle"),"the number of resampling iterations", options=list(container="body")),
+                  "+ number:",
+                  numericInput("cvrf", NULL, value = 5,width="100px")
+
+                )
+              )
+            })
+          ),
+          inline(
+            conditionalPanel("input.res_method=='LGOCV'",{
+             inline(
+               div(
+                 tipify(icon("fas fa-question-circle"),"the training percentage", options=list(container="body")),
+                 "+ percentage:",
+                 numericInput("pleaverf", NULL, value = 10,width="100px")
+               )
+             )
+            })
           )
         )
-      )
-      ,
+      ),
+
+      column(12,style='white-space: normal;',
+             uiOutput("rf_war")
+      ),
+
       column(12, align = "center",
         uiOutput("train_RF_button")
       ),
@@ -8152,21 +8211,39 @@ output$rf_mtry<-renderUI({
 data<-getdata_rfX()
   req(input$rf_search=='user-defined')
   div(
-    inline(numericInput("mtry", strong("mtry",popify(a(icon("fas fa-question-circle")),'mtry',"the number of variables randomly sampled as candidates at each split",options=list(container="body"))), value = 2, width="100px", max=ncol(data))),
-    inline(actionButton("mtry_include",tipify(icon("fas fa-arrow-right"),"Include mtry in the grid search"))),
+    div(
+      tipify(icon("fas fa-question-circle"),"the number of variables randomly sampled as candidates at each split", options = list(container="body")),
+      "+ mtry:",
+      inline(
+        numericInput("mtry", NULL, value = 2, width="100px", max=ncol(data))
+      ),
+
+      inline(actionButton("mtry_include",tipify(icon("fas fa-arrow-right"),"Include mtry in the grid search", options = list(container="body")))),
+
+      inline(span(verbatimTextOutput("mtry_grid"))),
+      inline(actionButton("remove_mtry",tipify(icon("fas fa-eraser"),"restart mtry"), style="button_active"))
+    )
+
+
+  )
+
+
+
+})
+output$rf_grid_search<-renderUI({
+  req(input$rf_search!='user-defined')
+  div(
+    tipify(icon("fas fa-question-circle"),"The maximum number of mtry- combinations that will be generated", options = list(container="body")),
+    "+ tuneLength:",
     inline(
-      column(12,
-             style="margin-top: 20px",
-             inline(verbatimTextOutput("mtry_grid")))
-    ),
-    inline(
-      actionButton("remove_mtry",tipify(icon("fas fa-eraser"),"restart mtry"), style="button_active"
-      )
+      numericInput("tuneLength", NULL, value = 5, width="82px")
     )
   )
 
-})
 
+
+
+})
 
 mtry_pool<-reactiveValues(df=c())
 observeEvent(input$mtry_include,{
@@ -8399,12 +8476,29 @@ observeEvent(input$rf_type,{
     sup_test<-attr(vals$RF_results,"supervisor")
     supname<-paste0("Observed Y [",sup_test,"]")
     column(12,
+          # renderPrint(predall_rf()$individual),
 
            renderPrint({
+             if(vals$RF_results$modelType=="Regression"){
+               obs_reg<-RF_observed()
+               pred_reg<-apply(predall_rf()$individual,1,mean)
+               stat<-postResample(pred_reg,obs_reg)
+               stat
+               } else{
+               obs_class<-RF_observed()
+               pred_class<-apply(predall_rf()$individual,1, function(x){
+                 res<-table(x)
+                 names(res)[ which.max(res)]})
 
-             postResample(unlist(pred_rf()),RF_observed())
+               stat<-postResample(pred_class,obs_class)
+
+
+               actual<-as.numeric(as.character(pred_class)==as.character(obs_class))
+
+               auc<-  Metrics::auc(actual,pred_class)
+               c(stat,AUC=auc,use.names=T)
+             }
            }),
-
            conditionalPanel("input.rfpred_which=='Datalist'",{
              selectInput("predrf_newY",
                          span(supname,tipify(icon("fas fa-question-circle"),"Data containing observed values to be compared with predicted values")),names(vals$saved_data[getobsRF()])
@@ -11840,12 +11934,17 @@ get_stackmap<-reactive({
 
 
 observe({
+  req(!input$trainRF %% 2)
   req(input$rf_search=='user-defined')
   if(input$rf_search=="user-defined" & !length(mtry_pool$df)>0) {
     output$rf_war<-renderUI({
       column(12,em(style="color: gray",
                    "Requires at least one mtry value when 'search' is 'user-defined'"
       ))
+    })
+  } else {
+    output$rf_war<-renderUI({
+      NULL
     })
   }
 })
@@ -11890,7 +11989,16 @@ observe({
 
   output$rf_table <- renderUI({
     div(
-      renderPrint(vals$RF_results$results),
+
+      renderPrint({
+        m<-vals$RF_results
+        pic<-which(  m$results$mtry==m$finalModel$mtry)
+        res<-m$results[pic,]
+        rownames(res)<-"Optimal model:"
+        res
+      }),
+
+
       div(
         sidebarLayout(
           sidebarPanel(
@@ -12266,7 +12374,18 @@ output$bmu_legend_out<-renderUI({
            p(strong(h4("Best matching units"))),
            sidebarLayout(
              sidebarPanel(uiOutput("pop_pcorr", width=300)),
-             mainPanel( plotOutput('pCorrCodes'))
+             mainPanel(
+               div( plotOutput('pCorrCodes'),
+                    #renderPrint({
+                      #m=vals$som_results
+                      #grid<-m$grid$pts
+                      #dtopo<-unit.distances(m$grid)
+                      #dcodes<-object.distances(m,"codes")
+                      #res<-unlist(lapply(codes, function (x)  sum(dist(x)/dist(dtopo))))
+                      #sort(res, dec=T)})
+
+                    )
+             )
            ))
   })
 
@@ -14512,59 +14631,6 @@ output$bmu_legend_out<-renderUI({
   })
 
 
-  output$ptree_control <- renderUI({
-    column(
-      12,style="margin: 20 20 20 20",
-      strong("ctree control"),
-      splitLayout(cellWidths = c("20%",'10%','70%'),
-                  column(12,
-                         selectInput(
-                           "teststat",
-                           strong("teststat",tipify(icon("fas fa-question-circle"),"type of the test statistic to be applied.", options=list(container="body"))),
-                           choices = c("quad", "max"),
-                           selectize=T
-                         ),
-                         fluidRow(style="margin-right: -100px; margin-top:",
-                                  p(
-                                    p(strong("Palette", style="color: #0D47A1")),
-                                    pickerInput(inputId = "dt_palette",
-                                                label = NULL,
-                                                choices = df_colors$df$val,
-                                                choicesOpt = list(content = df_colors$df$img), options=list(container="body"))
-                                  )
-                         )),
-
-                  column(12,style="margin-top: 22px",popify(bsButton("fine_ptree",icon("fas fa-sliders-h"),style  = "button_active", type ="toggle"),NULL,"Fine tuning",options=list(container="body"))),
-                  conditionalPanel("input.fine_ptree % 2",{
-                    column(12,
-                           splitLayout(
-                             selectInput(
-                               "testtype",
-                               strong("testtype",tipify(icon("fas fa-question-circle"),"how to compute the distribution of the test statistic.", options=list(container="body"))),
-                               choices = c("Bonferroni", "MonteCarlo", "Univariate", "Teststatistic"),
-                               selectize=T
-                             ),
-                             numericInput("mincriterion", strong("mincriterion",tipify(icon("fas fa-question-circle"),"the value of the test statistic", options=list(container="body"))), 0.95, step=0.01),
-                             numericInput("minsplit", strong("minsplit",tipify(icon("fas fa-question-circle"),"the minimum sum of weights in a node in order to be considered for splitting", options=list(container="body"))), 20, step = 1),
-                             numericInput("minbucket", strong("minbucket",tipify(icon("fas fa-question-circle"),"the minimum sum of weights in a terminal node.", options=list(container="body"))), 7, step = 1)
-
-                           ),
-                           splitLayout(
-                             numericInput("nresample", strong("nresample",tipify(icon("fas fa-question-circle"),"number of MonteCarlo replications to use when the distribution of the test statistic is simulated.", options=list(container="body"))), 9999, step = 1),
-                             numericInput("maxsurrogate", strong("maxsurrogate",tipify(icon("fas fa-question-circle"),"number of surrogate splits to evaluate. Note the currently only surrogate splits in ordered covariables are implemented.", options=list(container="body"))), 0, step = 0.1),
-                             numericInput("mtry",strong("mtry",tipify(icon("fas fa-question-circle"),"number of input variables randomly sampled as candidates at each node for random forest like algorithms. The default mtry = 0 means that no random selection takes place.", options=list(container="body"))), 0 , step = 1),
-                             numericInput("maxdepth", strong("maxdepth",tipify(icon("fas fa-question-circle"),"maximum depth of the tree. The default maxdepth = 0 means that no restrictions are applied to tree sizes.", options=list(container="body"))), 0 , step = 1)
-                           )
-
-                    )
-                  })
-
-      )
-
-
-
-    )
-  })
 
 
 
@@ -15993,7 +16059,8 @@ output$finetuning_som<-renderUI({
             "FALSE" = FALSE)
   })
 
-  observeEvent(input$sugtopo,{
+  observe({
+    req(input$sugtopo)
     if(isTRUE(input$sugtopo)){
       dim = topo.reactive()
       tunesom$xdim<-dim[[2]]
