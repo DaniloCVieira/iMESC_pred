@@ -1,6 +1,9 @@
 
 rm(list=ls())
 version<-strong("Version: 2.1.0.1")
+last_update<-"08-04-2022"
+last_update<-format(Sys.Date(),"%d-%m-%Y")
+
 list.of.packages <- c('shinydashboard','shinydashboardPlus','shinyjs','shiny',"e1071",'readxl','vegan',"party",'caret','viridisLite','aweSOM','sp','raster','Rcpp','rgdal','gstat','ggspatial','ggplot2','sf','class','shinyWidgets', 'randomForestExplainer','data.table',"ggpubr", "shinyBS","terra","purrr","NbClust", "colorRamps","DBI","shinyBS","wesanderson","colorspace","gplots","dendextend","kohonen","shinypanels","writexl","DT","gbRd", 'segRDA',"shinyjqui","mboost","partykit","Metrics", "shinybusy", "rayshader","shinycssloaders","plot3D","imputeMissings","geodist","ggrepel",'pdp',"sortable","colourpicker",'oceanmap',"rgl")
 
 
@@ -275,7 +278,7 @@ sidebarMenu(
 
            }")),
       div(class="footer",
-          em("Last update:"),"08-04-2022",
+          em("Last update:"),last_update,
           #p(em("by: Danilo C Vieira")),
           style="background: transparent; color: white"),
 
@@ -627,7 +630,7 @@ fluidPage(
                        column(12, style="margin-top 25px",
                               h4(style="margin-top 25px",span("iMESc", style="font-family: 'Alata', sans-serif;")),
                               p(version),
-                              p(strong("Last update:"),c("08-04-2022"))
+                              p(strong("Last update:"),last_update)
                               ,
                               p(em("developed by Danilo C Vieira in  R, version 4.0.5; RStudio, version 1.4, and Shiny package, version 1.6.0."))
 
