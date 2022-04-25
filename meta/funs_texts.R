@@ -116,7 +116,7 @@ datalist_render<-function(datalist=NULL,bagdata=F)
          splitLayout(
            absolutePanel(style="; height:20px; border-bottom: 1px dashed black;", width='90px'),
            column(12,
-             (h5(actionLink("change_attr","Change-Attribute"), style="color: #05668D")),
+             span(inline(h5(actionLink("change_attr","Change-Attribute"), style="color: #05668D")),em(icon("fas fa-hand-point-left"),"Click to expand change history")),
              conditionalPanel("input.change_attr % 2",{
 
                if(!is.null(transf)) {
@@ -1028,7 +1028,7 @@ textvarfacmap<-function(...)
 textcoords<-function(...){
   paste(
     em('Required only for the spatial tools menu:'),
-    "csv file with the longitudes and latitudes of the observations. The first column must contain the name of the observations. The second and third columns must contain the logitude and latitude respectively"
+    "csv file with the longitudes and latitudes of the observations. The first column must contain the name of the observations. The second and third columns must contain the longitude and latitude respectively"
 
 
   )

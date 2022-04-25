@@ -10396,31 +10396,100 @@ observeEvent(input$go_smw,{
 
   observeEvent(input$shp_view,{
     showModal(
-      modalDialog(
-        column(12,
-               fileInput(inputId = "shp", label = strong("Import shapefiles",tiphelp("please upload all files at once")), multiple = TRUE, accept = c('.shp', '.dbf','.sbn', '.sbx', '.shx', '.prj')),
-               uiOutput("shp_feature1"),
-               splitLayout(
-                 cellWidths = c("10%","90%"),
-                 column(12,
-                        uiOutput("SHP_IN"),
-                        p(tipify(downloadButton("save_feature",label =NULL),"save feature as r file", options=list(container="body")),
-                        )),
-                 renderPlot({
-                   ggplot(st_as_sf(filtershp())) + geom_sf()+
-                     theme(panel.background = element_rect(fill = "white"),
-                           panel.border = element_rect(fill=NA,color="black", size=0.5, linetype="solid"))
-
-
-                 })
-
-               )
-        ),
-        easyClose = T
-      )
+      shp_tool()
     )
   })
 
+  observeEvent(input$shp_tool,{
+    showModal(
+      shp_tool()
+    )
+  })
+  observeEvent(input$shp_tool2,{
+    showModal(
+      shp_tool()
+    )
+  })
+
+
+  output$shp_help<-renderUI({
+
+    div(
+      p("1. Upload ",popify(a("shape files*"),"Shape files",options=list(container="body"),
+                            HTML(paste0(
+                              "Shapefiles are a simple, nontopological format for storing the geometric location and attribute information of geographic features. The shapefile format defines the geometry and attributes of geographically referenced features in three or more files with specific file extensions that should be stored in the same project workspace. Requires at least three files:",
+                              div(HTML(paste0(hr()))),
+                              div(HTML(paste0(strong(".shp --")," The main file that stores the feature geometry; required."))),
+                              div(HTML(paste0(strong(".shx --")," The index file that stores the index of the feature geometry; required."))),
+
+                              div(HTML(paste0(strong(".dbf --")," The dBASE table that stores the attribute information of features; required."))),
+                              div(HTML(paste0(hr()))),
+                              div(HTML(paste0("There is a one-to-one relationship between geometry and attributes, which is based on record number. Attribute records in the dBASE file must be in the same order as records in the main file. "))),
+                              div(HTML(paste0(em(
+                                "Each file must have the same prefix, for example, basin.shp, basin.shx, and basin.dbf"
+                              ))))
+
+
+                            ))
+
+
+      )," at once"),
+      p("2. Use the Download button to save the shapes as a single object. This file can be uploaded in the 'Data Input' menu as base_shape or layer_shape."),
+      p(uiOutput("shp_addinfo"))
+
+
+    )
+
+  })
+  output$shp_addinfo<-renderUI({
+    req(length(vals$saved_data)>0)
+    div(
+      "3. If you already have a Datalist loaded, use the ", span("B",icon("fas fa-map"),"Add", style="background: LightGrey")," and ", span("L",icon("fas fa-map"),"Add", style="background: LightGrey")," buttons to add the shape to the selected Datalist as base_shape or layer_shape, respectively."
+    )
+  })
+
+  shp_tool<-reactive({
+    modalDialog(
+      column(12,
+             div(
+               uiOutput("shp_help")
+             ),
+
+             div(uiOutput("shp_datalist")),
+             fileInput(inputId = "shp", label = strong("Import shapefiles",tiphelp("please upload all files at once")), multiple = TRUE, accept = c('.shp', '.dbf','.sbn', '.sbx', '.shx', '.prj')),
+             uiOutput("shp_feature1"),
+             splitLayout(
+               cellWidths = c("10%","90%"),
+               column(12,
+
+                      p(tipify(downloadButton("save_feature",label =NULL),"Download as base_shape/layer_shape object", options=list(container="body"))),
+                      uiOutput("SHP_IN")),
+               renderPlot({
+                 ggplot(st_as_sf(filtershp())) + geom_sf()+
+                   theme(panel.background = element_rect(fill = "white"),
+                         panel.border = element_rect(fill=NA,color="black", size=0.5, linetype="solid"))
+
+
+               })
+
+             )
+      ),
+      title="Shp tool box",
+      easyClose = T
+    )
+  })
+  output$shp_datalist<-renderUI({
+    req(length(vals$saved_data)>0)
+    selectInput("shp_datalist","Datalist:",choices=names(vals$saved_data))
+  })
+  output$SHP_IN<-renderUI({
+    req(length(vals$saved_data)>0)
+    fluidRow(
+      p(bsButton("shp_add_base",strong(popify(div("B",icon("fas fa-map")),NULL,paste0(span("Click to add shapefiles into the Datalist as a Base-Shape-Attribute")), options=list(container="body")),"Add", style='button_active'))),
+      p(bsButton("shp_add_layer",strong(popify(div("L",icon("fas fa-map")),NULL,paste0(span("Click to add shapefiles into the Datalist as a Layer-Shape-Attribute")), options=list(container="body")),"Add", style='button_active'))
+      )
+    )
+  })
 
   observeEvent(input$close_shp,{
 
@@ -10437,13 +10506,6 @@ observeEvent(input$go_smw,{
 
 
 
-  output$SHP_IN<-renderUI({
-    fluidRow(
-      p(bsButton("shp_add_base",strong(popify(div("B",icon("fas fa-map")),NULL,paste0(span("Click to add shapefiles into the Datalist as a Base-Shape-Attribute")), options=list(container="body")),"Add", style='button_active'))),
-      p(bsButton("shp_add_layer",strong(popify(div("L",icon("fas fa-map")),NULL,paste0(span("Click to add shapefiles into the Datalist as a Layer-Shape-Attribute")), options=list(container="body")),"Add", style='button_active'))
-      )
-    )
-  })
 
 
 
