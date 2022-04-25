@@ -10,17 +10,16 @@ message: >-
   'preferred-citation'.
 type: software
 authors:
-  - given-names: Danilo
-    name-particle: Candido
+  - name-particle: D. C.
     family-names: Vieira
     email: vieiradc@yahoo.com.br
     orcid: 'https://orcid.org/0000-0002-7989-6553'
     affiliation: Universidade Federal de São Paulo
   - orcid: 'https://orcid.org/0000-0001-8625-4279'
-    given-names: Gustavo
     family-names: Fonseca
     email: gfonseca.unifesp@gmail.com
     affiliation: Universidade Federal de São Paulo
+    name-particle: G.
 identifiers:
   - type: doi
     value: 10.5281/zenodo.6484066
