@@ -4,7 +4,7 @@ version<-strong("Version: 2.1.0.1")
 last_update<-"08-04-2022"
 last_update<-format(Sys.Date(),"%d-%m-%Y")
 
-list.of.packages <- c('shinydashboard','shinydashboardPlus','shinyjs','shiny',"e1071",'readxl','vegan',"party",'caret','viridisLite','aweSOM','sp','raster','Rcpp','rgdal','gstat','ggspatial','ggplot2','sf','class','shinyWidgets', 'randomForestExplainer','data.table',"ggpubr", "shinyBS","terra","purrr","NbClust", "colorRamps","DBI","shinyBS","wesanderson","colorspace","gplots","dendextend","kohonen","shinypanels","writexl","DT","gbRd", 'segRDA',"shinyjqui","mboost","partykit","Metrics", "shinybusy", "rayshader","shinycssloaders","plot3D","imputeMissings","geodist","ggrepel",'pdp',"sortable","colourpicker",'oceanmap',"rgl")
+list.of.packages <- c('shinydashboard','shinydashboardPlus','shinyjs','shiny',"e1071",'readxl','vegan',"party",'caret','viridisLite','aweSOM','sp','raster','Rcpp','rgdal','gstat','ggspatial','ggplot2','sf','class','shinyWidgets', 'randomForestExplainer','data.table',"ggpubr", "shinyBS","terra","purrr","NbClust", "colorRamps","DBI","shinyBS","wesanderson","colorspace","gplots","dendextend","kohonen","shinypanels","writexl","DT","gbRd", 'segRDA',"shinyjqui","mboost","partykit","Metrics", "shinybusy", "shinycssloaders","plot3D","imputeMissings","geodist","ggrepel",'pdp',"sortable","colourpicker",'oceanmap')
 
 
 if(!length(grep("connect/apps",getwd()))>0){
@@ -26,8 +26,8 @@ library("geodist")
 library("plot3D")
 library('imputeMissings')
 library("shinycssloaders")
-library(rayshader)
-library(rgl)
+
+#library(rgl)
 library('shinybusy')
 library("Metrics")
 library("shinyjqui")
@@ -12655,6 +12655,7 @@ output$bmu_legend_out<-renderUI({
                          column(12,selectInput('splitdata',"Variables:", choices=options_show)
                          ))
       ),
+      column(12,renderPrint(class(getdata_upload()))),
       column(12,plotOutput("summ_num", height = '700px'))
     )
 
