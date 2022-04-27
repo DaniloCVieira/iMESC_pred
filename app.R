@@ -4,7 +4,7 @@ version<-strong("Version: 2.1.0.1")
 last_update<-"08-04-2022"
 last_update<-format(Sys.Date(),"%d-%m-%Y")
 
-list.of.packages <- c('shinydashboard','shinydashboardPlus','shinyjs','shiny',"e1071",'readxl','vegan',"party",'caret','viridisLite','aweSOM','sp','raster','Rcpp','rgdal','gstat','ggspatial','ggplot2','sf','class','shinyWidgets', 'randomForestExplainer','data.table',"ggpubr", "shinyBS","terra","purrr","NbClust", "colorRamps","DBI","shinyBS","wesanderson","colorspace","gplots","dendextend","kohonen","shinypanels","writexl","DT","gbRd", 'segRDA',"shinyjqui","mboost","partykit","Metrics", "shinybusy", "shinycssloaders","plot3D","imputeMissings","geodist","ggrepel",'pdp',"sortable","colourpicker",'oceanmap')
+list.of.packages <- c('shinydashboard','shinydashboardPlus','shinyjs','shiny',"e1071",'readxl','vegan',"party",'caret','viridisLite','aweSOM','sp','raster','Rcpp','rgdal','gstat','ggspatial','ggplot2','sf','class','shinyWidgets', 'randomForestExplainer','data.table',"ggpubr", "shinyBS","terra","purrr","NbClust", "colorRamps","DBI","shinyBS","wesanderson","colorspace","gplots","dendextend","kohonen","shinypanels","writexl","DT","gbRd", 'segRDA',"shinyjqui","mboost","partykit","Metrics", "shinybusy", "shinycssloaders","plot3D","imputeMissings","geodist","ggrepel",'pdp',"sortable","colourpicker",'oceanmap',"rgl")
 
 
 if(!length(grep("connect/apps",getwd()))>0){
@@ -27,7 +27,7 @@ library("plot3D")
 library('imputeMissings')
 library("shinycssloaders")
 
-#library(rgl)
+library(rgl)
 library('shinybusy')
 library("Metrics")
 library("shinyjqui")
@@ -1327,7 +1327,7 @@ observeEvent(input$stack_scatter_3d,{
     req(isTRUE(input$ss_rgl))
    div(
      renderPrint(rgl.dev.list()),
-     #rglwidgetOutput("ssrgl_out",  width = 600, height = 600)
+     rglwidgetOutput("ssrgl_out",  width = 600, height = 600)
    )
   })
 
@@ -1335,7 +1335,7 @@ observeEvent(input$stack_scatter_3d,{
     req(isTRUE(input$sr_rgl))
     div(
       renderPrint(rgl.dev.list()),
-      #rglwidgetOutput("srrgl_out",  width = 600, height = 600)
+      rglwidgetOutput("srrgl_out",  width = 600, height = 600)
     )
   })
 
@@ -3229,7 +3229,7 @@ req(isFALSE(input$stack_scatter_3d))}
     req(!isTRUE(input$mantel_map))
     req(isTRUE(input$surface_map))
     req(isTRUE(input$rgl_map))
-    #rglwidgetOutput("m3d_map",  width = 600, height = 600)
+    rglwidgetOutput("m3d_map",  width = 600, height = 600)
   })
   output$map04<-renderUI({
     req(!isTRUE(input$mantel_map))
