@@ -1327,7 +1327,7 @@ observeEvent(input$stack_scatter_3d,{
     req(isTRUE(input$ss_rgl))
    div(
      renderPrint(rgl.dev.list()),
-     rglwidgetOutput("ssrgl_out",  width = 600, height = 600)
+     #rglwidgetOutput("ssrgl_out",  width = 600, height = 600)
    )
   })
 
@@ -1335,7 +1335,7 @@ observeEvent(input$stack_scatter_3d,{
     req(isTRUE(input$sr_rgl))
     div(
       renderPrint(rgl.dev.list()),
-      rglwidgetOutput("srrgl_out",  width = 600, height = 600)
+      #rglwidgetOutput("srrgl_out",  width = 600, height = 600)
     )
   })
 
@@ -3229,7 +3229,7 @@ req(isFALSE(input$stack_scatter_3d))}
     req(!isTRUE(input$mantel_map))
     req(isTRUE(input$surface_map))
     req(isTRUE(input$rgl_map))
-    rglwidgetOutput("m3d_map",  width = 600, height = 600)
+    #rglwidgetOutput("m3d_map",  width = 600, height = 600)
   })
   output$map04<-renderUI({
     req(!isTRUE(input$mantel_map))
