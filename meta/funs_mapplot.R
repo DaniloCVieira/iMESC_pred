@@ -3,7 +3,7 @@ getcolhabs<-function(newcolhabs,palette,n){
 }
 
 
-map_discrete_variable<-function(data,get,coords,base_shape=NULL,layer_shape=NULL,main="",size=.14,cex.main=15,cex.axes=13,cex.lab=15,cex.sub=14,cex.leg=11,cex.pt=7,subtitle="",leg="", factors=NULL,showcoords=F, cex.coords=NULL, col.coords="firebrick",col.palette='matlab.like2',col.fac="firebrick",symbol=15, scalesize_size=T,scalesize_color=T, points=T, cex.fac=4, as_factor=F,bmu=F, colored_by_factor=NULL,showguides=F, limits=NULL,layer_col="gray",lighten=0.5,base_col="white",base_lighten=1,newcolhabs){
+map_discrete_variable<-function(data,get,coords,base_shape=NULL,layer_shape=NULL,main="",size=.14,cex.main=15,cex.axes=13,cex.lab=15,cex.sub=14,cex.leg=11,cex.pt=7,subtitle="",leg="", factors=NULL,showcoords=F, cex.coords=NULL, col.coords="firebrick",col.palette='matlab.like2',col.fac="firebrick",symbol=15, scalesize_size=T,scalesize_color=T, points=T, cex.fac=4, as_factor=F,bmu=F, colored_by_factor=NULL,showguides=F, limits=NULL,layer_col="gray",lighten=0.5,base_col="white",base_lighten=1,newcolhabs, extralayers=NULL,  data_depth=if(!is.null(extralayers)){3+(length(extralayers$layers)*2)} else{NULL}){
   base_shape0<-base_shape
   layer_shape0<-layer_shape
   shapes<-get_shapes(base_shape,layer_shape,coords)
@@ -89,11 +89,42 @@ map_discrete_variable<-function(data,get,coords,base_shape=NULL,layer_shape=NULL
   }
 
 
+
+
   if(!is.null(base_shape0)){
     p<-p+geom_sf(data=base_shape, fill=lighten(base_col,base_lighten), lty=1)
   }
 
-  if(!is.null(colored_by_factor)){
+
+  if(!is.null(extralayers)){
+    for(i in 1:length(  extralayers$layers)){
+      col_extra<-getcolhabs(newcolhabs,extralayers$colors[i],nrow(as.data.frame(st_as_sf(extralayers$layers[[i]]))))
+      p<-p+geom_sf(data=st_as_sf(extralayers$layers[[i]]), col=lighten(   col_extra,extralayers$alphas[i]), lty=1)
+     names( p$layers)[length( p$layers)]<-paste0("extra",i)
+      if(extralayers$labels[i]!='None'){
+      p<-p+geom_sf_text(data=st_as_sf(extralayers$layers[[i]]),aes(label=get(extralayers$labels[i])), size=extralayers$sizes[i],check_overlap=T,col=col_extra)
+      names( p$layers)[length( p$layers)]<-paste0("extra_lab",i)
+      }
+
+    }
+
+  }
+
+
+
+#res<-split(extralayers$layers[[i]],extralayers$layers[[i]]$Contour)
+#res<-do.call(rbind,lapply(lapply(res,st_bbox),function(x) c(x$xmin,x$ymin)))
+#res<-data.frame(res)
+#res$id<-rownames(res)
+#colnames(res)[c(1:2)]<-c("x","y")
+#p+geom_sf(data=st_as_sf(extralayers$layers[[i]]), col=lighten(   extralayers$colors[i],extralayers$alphas[i]))+geom_text(data=res,aes(x,y,label=id), angle =45)
+
+
+
+
+
+
+if(!is.null(colored_by_factor)){
 
     colfactor<-colored_by_factor[,1]
     names(colfactor)<-rownames(data[get])
@@ -132,7 +163,7 @@ map_discrete_variable<-function(data,get,coords,base_shape=NULL,layer_shape=NULL
         }
     }
   }
-
+  names( p$layers)[length( p$layers)]<-paste0('points')
   p<-p  +
     scale_size(name=name.var, range=c(0,cex.pt))
 
@@ -179,6 +210,16 @@ map_discrete_variable<-function(data,get,coords,base_shape=NULL,layer_shape=NULL
     p<-p+geom_point( data=geopoint0, aes(x=x, y=y),  size=cex.coords, pch=3, colour=col.coords)
 
   }
+
+
+
+
+  if(!is.null(extralayers)){
+  point_layer<-p$layers[ grep("points",  names(p$layers))]
+  old_layer<-p$layers[-grep("points",  names(p$layers))]
+  new_p <- append(old_layer, point_layer, after=data_depth-1)
+  p$layers<-new_p}
+
   p
 }
 

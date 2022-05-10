@@ -164,7 +164,7 @@ Map_model<-function(data,get,coords,base_shape=NULL,layer_shape=NULL,res=20000, 
     p
   })
 }
-map_style<-function(data,get,coords, p,main="",subtitle="",cex.axes=13,cex.lab=13,cex.main=13,cex.sub=13,cex.leg=13,factors=NULL,cex.fac=13,col.fac="red",showcoords=T, col.coords="black",cex.coords=13,showguides=T, layer_shape=NULL,col.palette, leg="",layer_col="gray",lighten=1.4,newcolhabs){
+map_style<-function(data,get,coords, p,main="",subtitle="",cex.axes=13,cex.lab=13,cex.main=13,cex.sub=13,cex.leg=13,factors=NULL,cex.fac=13,col.fac="red",showcoords=T, col.coords="black",cex.coords=13,showguides=T, layer_shape=NULL,col.palette, leg="",layer_col="gray",lighten=1.4,newcolhabs,extralayers=NULL){
   my_rst<-attr(p,"my_rst")
   rasterpoints <-data.frame(to_spatial(data.frame( rasterToPoints(my_rst))))
 
@@ -187,6 +187,22 @@ map_style<-function(data,get,coords, p,main="",subtitle="",cex.axes=13,cex.lab=1
   limits<-attr(p, 'limits')
   base_shape<-attr(p, 'base_shape')
   bbox<-t(limits)
+
+
+  if(!is.null(extralayers)){
+    for(i in 1:length(  extralayers$layers)){
+      col_extra<-getcolhabs(newcolhabs,extralayers$colors[i],nrow(as.data.frame(st_as_sf(extralayers$layers[[i]]))))
+      p<-p+geom_sf(data=st_as_sf(extralayers$layers[[i]]), col=lighten(   col_extra,extralayers$alphas[i]), lty=1)
+      names( p$layers)[length( p$layers)]<-paste0("extra",i)
+      if(extralayers$labels[i]!='None'){
+        p<-p+geom_sf_text(data=st_as_sf(extralayers$layers[[i]]),aes(label=get(extralayers$labels[i])), size=extralayers$sizes[i],check_overlap=T,col=col_extra)
+        names( p$layers)[length( p$layers)]<-paste0("extra_lab",i)
+      }
+
+    }
+
+  }
+
   p<-p+
     # geom_sf(fill= "gray90") +
     coord_sf(xlim = c(bbox[1,]), ylim = c(bbox[2,]), expand = FALSE)+

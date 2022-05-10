@@ -79,7 +79,8 @@ getsom_results<-function(som_pred,which)
 
 
 pcorr<-function(m,npic=10, indicate=c("var","cor"), col.arrow="gray80",cex.var=1, cex=1, pch=16, labels.ind=NULL,bg_palette="matlab.like2", factor.pal="gray", points=T,ncol=1,insetx=0,insety=0,alpha.legend=0.85, predict=FALSE, pred_col="firebrick", alpha_bg=1, border="white",col.text="black", legend=T,newcolhabs){
-
+  indicadores<-NULL
+  result<-NULL
 
   bmuvalues<-as.matrix(kohonen::unit.distances(m$grid,m$grid$toroidal))[,1]
   bmuvalues<-bmuvalues+seq(0.001,0.002,length.out=length(bmuvalues))
@@ -131,6 +132,7 @@ if(colreq[1]!=colreq[2]){
         }
 
     }
+    plotresult<-recordPlot()
   }
 
 
@@ -186,14 +188,16 @@ if(colreq[1]!=colreq[2]){
       legend("topr",pch=pch,legend=levels(labels.ind), col=getcolhabs(newcolhabs,factor.pal, nlevels(labels.ind)),border=NA, ncol=ncol, inset=c(insetx,insety),cex=cex, bg=adjustcolor('white',alpha.legend))
 
     }
-    plotresult<-recordPlot()
-    attr(plotresult,"indicadores")<-indicadores
-    attr(plotresult,"result")<-result
-    #plotind(m,indicadores)
-    on.exit(par(opar),add=TRUE,after=FALSE)
-    return(plotresult)
+
+
 
   }
+  plotresult<-recordPlot()
+  attr(plotresult,"indicadores")<-indicadores
+  attr(plotresult,"result")<-result
+  #plotind(m,indicadores)
+  on.exit(par(opar),add=TRUE,after=FALSE)
+  return(plotresult)
 }
 
 
